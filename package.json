@@ -1,8 +1,14 @@
 {
+  "name": "telegram-bot",
+  "version": "1.0.0",
+  "description": "A simple Telegram bot",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js"
+  },
   "dependencies": {
     "crypto": "^1.0.1",
     "express": "^4.21.1",
-    "node-telegram-bot-api": "^0.66.0",
-    "start": "node bot.js"
+    "node-telegram-bot-api": "^0.61.0"
   }
 }
