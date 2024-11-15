@@ -2,7 +2,7 @@
   "dependencies": {
     "crypto": "^1.0.1",
     "express": "^4.21.1",
-    "node-telegram-bot-api": "^0.66.0"
+    "node-telegram-bot-api": "^0.66.0",
     "start": "node bot.js"
   }
 }
