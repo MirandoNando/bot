@@ -7,7 +7,8 @@ const bot = new TelegramBot(token, { polling: true });
 // Nama game pendek yang didaftarkan di BotFather
 const GAME_SHORT_NAME = 'idleFarmingMonsterAR';
 
-onst express = require('express');
+
+const express = require('express');
 const app = express();
 
 // Gunakan PORT dari variabel lingkungan, atau fallback ke 3000
