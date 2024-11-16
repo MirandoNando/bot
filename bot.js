@@ -17,7 +17,7 @@ const PORT = process.env.PORT || 3000;
 const axios = require('axios');
 
 setInterval(() => {
-  axios.get('https://your-app-url.onrender.com')
+  axios.get('https://mirandonando.github.io/')
     .then(() => console.log('Ping successful!'))
     .catch(err => console.log('Ping failed:', err.message));
 }, 5 * 60 * 1000); // Ping setiap 5 menit
@@ -33,7 +33,7 @@ app.listen(PORT, () => {
 // Handle command /start untuk menyapa pengguna
 bot.onText(/\/start/, (msg) => {
     const chatId = msg.chat.id;
-    bot.sendMessage(chatId, 'Selamat datang di bot game saya! Gunakan /play untuk mulai bermain.');
+    bot.sendMessage(chatId, 'Selamat datang di bot game MonsterAR! Gunakan /play untuk mulai bermain.');
 });
 
 // Handle command /play untuk mengirim game
