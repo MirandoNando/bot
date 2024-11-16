@@ -14,6 +14,14 @@ const app = express();
 // Gunakan PORT dari variabel lingkungan, atau fallback ke 3000
 const PORT = process.env.PORT || 3000;
 
+const axios = require('axios');
+
+setInterval(() => {
+  axios.get('https://your-app-url.onrender.com')
+    .then(() => console.log('Ping successful!'))
+    .catch(err => console.log('Ping failed:', err.message));
+}, 5 * 60 * 1000); // Ping setiap 5 menit
+
 app.get('/', (req, res) => {
   res.send('Hello, Render!');
 });
