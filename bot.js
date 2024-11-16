@@ -17,7 +17,7 @@ const PORT = process.env.PORT || 3000;
 const axios = require('axios');
 
 setInterval(() => {
-  axios.get('https://mirandonando.github.io/')
+  axios.get('https://bot-lzsk.onrender.com/')
     .then(() => console.log('Ping successful!'))
     .catch(err => console.log('Ping failed:', err.message));
 }, 5 * 60 * 1000); // Ping setiap 5 menit
@@ -77,7 +77,7 @@ bot.on('callback_query', (callbackQuery) => {
     const username = from.username || 'unknown'; // Username bisa undefined, berikan default
 
     // Buat URL dengan query parameter user_id dan username
-    const gameUrl = `https://192.168.101.72/farming?user_id=${userId}&username=${encodeURIComponent(username)}`;
+    const gameUrl = `https://mirandonando.github.io/idleFarming?user_id=${userId}&username=${encodeURIComponent(username)}`;
 
     // Jawab callback query dengan URL game
     bot.answerCallbackQuery(id, {
