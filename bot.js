@@ -77,8 +77,8 @@ bot.on('callback_query', (callbackQuery) => {
     const username = from.username || 'unknown'; // Username bisa undefined, berikan default
 
     // Buat URL dengan query parameter user_id dan username
-  //  const gameUrl = `https://webgame.monsterar.net/idleFarming?user_id=${userId}&username=${encodeURIComponent(username)}`;
-    const gameUrl = `https://webgame.monsterar.net/idleFarming/`;
+    const gameUrl = `https://webgame.monsterar.net/idleFarming?user_id=${userId}&username=${encodeURIComponent(username)}`;
+    //const gameUrl = 'https://webgame.monsterar.net';
 
     // Jawab callback query dengan URL game
     bot.answerCallbackQuery(id, {
