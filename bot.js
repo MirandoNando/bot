@@ -3,9 +3,10 @@ const fs = require('fs');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const path = require('path');
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'data.json');
 
 // Middleware
@@ -112,3 +113,13 @@ app.get('/leaderboard', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server is running at http://localhost:${PORT}`);
 });
+
+// 🟢 Auto-ping ke diri sendiri (Render.com keep-alive)
+const PING_URL = 'https://your-render-app-name.onrender.com/leaderboard'; // ganti dengan URL aslimu
+
+setInterval(() => {
+  fetch(PING_URL)
+    .then(res => res.json())
+    .then(() => console.log(`[PING] Server pinged at ${new Date().toLocaleTimeString()}`))
+    .catch(err => console.error('[PING ERROR]', err));
+}, 14 * 60 * 1000); // tiap 14 menit
