@@ -3,11 +3,12 @@ const fs = require('fs');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const path = require('path');
-const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'data.json');
+const PING_URL = 'https://your-render-app-name.onrender.com/leaderboard'; // ganti ini
 
 // Middleware
 app.use(cors());
@@ -88,6 +89,7 @@ app.delete('/delete-score/:name', (req, res) => {
   let data = JSON.parse(raw);
 
   const newData = data.filter(entry => entry.name !== name);
+
   if (newData.length === data.length) {
     return res.status(404).json({ error: 'Entry not found' });
   }
@@ -111,15 +113,13 @@ app.get('/leaderboard', (req, res) => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`Server is running at http://localhost:${PORT}`);
+  console.log(`🚀 Server is running at http://localhost:${PORT}`);
 });
 
-// 🟢 Auto-ping ke diri sendiri (Render.com keep-alive)
-const PING_URL = 'https://your-render-app-name.onrender.com/leaderboard'; // ganti dengan URL aslimu
-
+// KEEP ALIVE PING
 setInterval(() => {
   fetch(PING_URL)
     .then(res => res.json())
-    .then(() => console.log(`[PING] Server pinged at ${new Date().toLocaleTimeString()}`))
+    .then(() => console.log(`[PING] Sent at ${new Date().toLocaleTimeString()}`))
     .catch(err => console.error('[PING ERROR]', err));
-}, 14 * 60 * 1000); // tiap 14 menit
+}, 14 * 60 * 1000); // 14 menit
