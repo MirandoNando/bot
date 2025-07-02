@@ -1,125 +1,134 @@
+// Panggil library yang dibutuhkan
 const express = require('express');
-const fs = require('fs');
+const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const path = require('path');
-const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
+require('dotenv').config(); // Untuk memuat variabel dari file .env
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const DATA_FILE = path.join(__dirname, 'data.json');
 const PING_URL = 'https://your-render-app-name.onrender.com/leaderboard'; // ganti ini
 
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
 
+// ==========================================================
+// 1. KONEKSI DATABASE
+// ==========================================================
+mongoose.connect(process.env.MONGODB_URI)
+    .then(() => console.log('✅ Berhasil terhubung ke MongoDB Atlas'))
+    .catch(err => console.error('❌ Gagal terhubung ke MongoDB:', err));
+
+// ==========================================================
+// 2. SKEMA & MODEL DATA (Struktur Tabel Database)
+// ==========================================================
+const scoreSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    phone: { type: String, required: true },
+    score: { type: Number, required: true },
+    date: { type: Date, default: Date.now }
+});
+
+const Score = mongoose.model('Score', scoreSchema);
+
+// ==========================================================
+// 3. ENDPOINTS / ROUTES (Logika Aplikasi)
+// ==========================================================
+
 // POST: Tambah data baru
-app.post('/submit-score', (req, res) => {
-  const { name, phone, score } = req.body;
+app.post('/submit-score', async (req, res) => {
+    try {
+        const { name, phone, score } = req.body;
 
-  if (!name || !phone || score == null) {
-    return res.status(400).json({ error: 'Incomplete data' });
-  }
+        if (!name || !phone || score == null) {
+            return res.status(400).json({ error: 'Incomplete data' });
+        }
+        
+        const newScore = new Score({ name, phone, score });
+        await newScore.save(); // Simpan ke database
+        res.status(201).json({ message: 'Score saved to database!' });
 
-  let existingData = [];
-  if (fs.existsSync(DATA_FILE)) {
-    const raw = fs.readFileSync(DATA_FILE);
-    existingData = JSON.parse(raw);
-  }
-
-  const newEntry = { name, phone, score, date: new Date().toISOString() };
-  existingData.push(newEntry);
-
-  fs.writeFileSync(DATA_FILE, JSON.stringify(existingData, null, 2));
-  res.status(200).json({ message: 'Score saved to file!' });
+    } catch (error) {
+        res.status(500).json({ error: 'Server error while saving score', details: error.message });
+    }
 });
 
 // GET: Ambil semua data
-app.get('/scores', (req, res) => {
-  if (fs.existsSync(DATA_FILE)) {
-    const raw = fs.readFileSync(DATA_FILE);
-    const data = JSON.parse(raw);
-    res.status(200).json(data);
-  } else {
-    res.status(200).json([]);
-  }
+app.get('/scores', async (req, res) => {
+    try {
+        const scores = await Score.find({}); // Cari semua dokumen
+        res.status(200).json(scores);
+    } catch (error) {
+        res.status(500).json({ error: 'Server error while fetching scores' });
+    }
 });
 
 // PUT: Update berdasarkan `name`
-app.put('/update-score', (req, res) => {
-  const { name, phone, score } = req.body;
+app.put('/update-score', async (req, res) => {
+    try {
+        const { name, phone, score } = req.body;
 
-  if (!name || !phone || score == null) {
-    return res.status(400).json({ error: 'Incomplete data' });
-  }
+        if (!name || !phone || score == null) {
+            return res.status(400).json({ error: 'Incomplete data' });
+        }
+        
+        // Cari satu data berdasarkan nama, lalu update. Opsi { new: true } mengembalikan data yang sudah diupdate.
+        const updatedScore = await Score.findOneAndUpdate(
+            { name: name }, 
+            { phone, score, date: new Date() }, 
+            { new: true, runValidators: true }
+        );
 
-  if (!fs.existsSync(DATA_FILE)) {
-    return res.status(404).json({ error: 'Data not found' });
-  }
+        if (!updatedScore) {
+            return res.status(404).json({ error: 'Entry not found' });
+        }
+        
+        res.status(200).json({ message: 'Score updated!', data: updatedScore });
 
-  const raw = fs.readFileSync(DATA_FILE);
-  let data = JSON.parse(raw);
-
-  const index = data.findIndex(entry => entry.name === name);
-  if (index === -1) {
-    return res.status(404).json({ error: 'Entry not found' });
-  }
-
-  data[index] = {
-    ...data[index],
-    phone,
-    score,
-    date: new Date().toISOString()
-  };
-
-  fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
-  res.status(200).json({ message: 'Score updated!' });
+    } catch (error) {
+        res.status(500).json({ error: 'Server error while updating score' });
+    }
 });
 
 // DELETE: Hapus berdasarkan `name`
-app.delete('/delete-score/:name', (req, res) => {
-  const { name } = req.params;
+app.delete('/delete-score/:name', async (req, res) => {
+    try {
+        const { name } = req.params;
+        const result = await Score.findOneAndDelete({ name: name });
 
-  if (!fs.existsSync(DATA_FILE)) {
-    return res.status(404).json({ error: 'Data file not found' });
-  }
+        if (!result) {
+            return res.status(404).json({ error: 'Entry not found' });
+        }
+        
+        res.status(200).json({ message: 'Score deleted!' });
 
-  const raw = fs.readFileSync(DATA_FILE);
-  let data = JSON.parse(raw);
-
-  const newData = data.filter(entry => entry.name !== name);
-
-  if (newData.length === data.length) {
-    return res.status(404).json({ error: 'Entry not found' });
-  }
-
-  fs.writeFileSync(DATA_FILE, JSON.stringify(newData, null, 2));
-  res.status(200).json({ message: 'Score deleted!' });
+    } catch (error) {
+        res.status(500).json({ error: 'Server error while deleting score' });
+    }
 });
 
-// GET: Leaderboard sorted by score descending
-app.get('/leaderboard', (req, res) => {
-  if (!fs.existsSync(DATA_FILE)) {
-    return res.status(200).json([]);
-  }
-
-  const raw = fs.readFileSync(DATA_FILE);
-  const data = JSON.parse(raw);
-  const sorted = data.sort((a, b) => b.score - a.score);
-
-  res.status(200).json(sorted);
+// GET: Leaderboard diurutkan berdasarkan skor
+app.get('/leaderboard', async (req, res) => {
+    try {
+        // Cari semua data, urutkan berdasarkan 'score' secara descending (-1)
+        const leaderboard = await Score.find({}).sort({ score: -1 });
+        res.status(200).json(leaderboard);
+    } catch (error) {
+        res.status(500).json({ error: 'Server error while fetching leaderboard' });
+    }
 });
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`🚀 Server is running at http://localhost:${PORT}`);
+    console.log(`🚀 Server is running at http://localhost:${PORT}`);
 });
 
-// KEEP ALIVE PING
+// KEEP ALIVE PING (tidak perlu diubah)
+const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 setInterval(() => {
-  fetch(PING_URL)
-    .then(res => res.json())
-    .then(() => console.log(`[PING] Sent at ${new Date().toLocaleTimeString()}`))
-    .catch(err => console.error('[PING ERROR]', err));
-}, 14 * 60 * 1000); // 14 menit
+    fetch(PING_URL)
+        .then(() => console.log(`[PING] Sent at ${new Date().toLocaleTimeString()}`))
+        .catch(err => console.error('[PING ERROR]', err));
+}, 14 * 60 * 1000);

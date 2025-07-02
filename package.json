@@ -13,8 +13,11 @@
   "dependencies": {
     "body-parser": "^2.2.0",
     "cors": "^2.8.5",
+    "dotenv": "^17.0.1",
     "express": "^5.1.0",
     "fs": "^0.0.1-security",
+    "mongodb": "^6.17.0",
+    "mongoose": "^8.16.1",
     "node-fetch": "^3.3.2"
   }
 }
